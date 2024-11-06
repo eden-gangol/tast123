@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .game-container {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background-color: #f0f0f0;
+            margin: 10px auto;
+            border-radius: 10px;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 10px;
+            transition: width 0.5s ease-in-out;
+        }
+        .options-container {
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .option {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: background-color 0.3s;
+        }
+        .option:hover {
+            background-color: #45a049;
+        }
+        .problem-container {
+            font-size: 2em;
+            margin: 20px;
+        }
+        .message {
+            margin: 10px;
+            padding: 10px;
+            font-size: 1.2em;
+        }
+        .message.correct {
+            color: #4CAF50;
+        }
+        .message.incorrect {
+            color: #f44336;
+        }
+        .level-welcome {
+            color: #4CAF50;
+            font-size: 1.5em;
+            margin: 15px;
+            animation: fadeIn 1s;
+        }
+        .level-select button {
+            padding: 8px 16px;
+            margin: 5px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .level-select button:hover {
+            background-color: #1976D2;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .score {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>משחק פאזל חשבוני</h1>
+            <h2>פתור את התרגילים!</h2>
+        </div>
+
+        <div class="level-select">
+            <button onclick="selectLevel(1)">שלב 1</button>
+            <button onclick="selectLevel(2)">שלב 2</button>
+            <button onclick="selectLevel(3)">שלב 3</button>
+            <button onclick="selectLevel(4)">שלב 4</button>
+        </div>
+
+        <div class="level-info">
+            תרגיל <span id="currentProblem">1</span> מתוך 4
+        </div>
+
+        <div class="progress-bar">
+            <div id="progress" class="progress"></div>
+        </div>
+
+        <div class="problem-container">
+            <span id="problem"></span>
+        </div>
+
+        <div id="message" class="message"></div>
+        <div id="options" class="options-container"></div>
+        <div class="score">נקודות: <span id="score">0</span></div>
+    </div>
+
+    <script>
+        let currentLevel = 1;
+        let currentProblem = 1;
+        let score = 0;
+        
+        // מערך התרגילים לכל שלב
+        const levels = {
+            1: [
+                { problem: '2 + 3 = ', answer: 5, options: [4, 5, 6, 7] },
+                { problem: '4 + 2 = ', answer: 6, options: [5, 6, 7, 8] },
+                { problem: '1 + 5 = ', answer: 6, options: [4, 5, 6, 7] },
+                { problem: '3 + 3 = ', answer: 6, options: [5, 6, 7, 8] }
+            ],
+            2: [
+                { problem: '5 - 2 = ', answer: 3, options: [2, 3, 4, 5] },
+                { problem: '7 - 3 = ', answer: 4, options: [3, 4, 5, 6] },
+                { problem: '6 - 4 = ', answer: 2, options: [1, 2, 3, 4] },
+                { problem: '8 - 5 = ', answer: 3, options: [2, 3, 4, 5] }
+            ],
+            3: [
+                { problem: '2 × 3 = ', answer: 6, options: [4, 5, 6, 7] },
+                { problem: '4 × 2 = ', answer: 8, options: [6, 7, 8, 9] },
+                { problem: '3 × 3 = ', answer: 9, options: [7, 8, 9, 10] },
+                { problem: '5 × 2 = ', answer: 10, options: [8, 9, 10, 11] }
+            ],
+            4: [
+                { problem: '6 ÷ 2 = ', answer: 3, options: [2, 3, 4, 5] },
+                { problem: '8 ÷ 4 = ', answer: 2, options: [1, 2, 3, 4] },
+                { problem: '9 ÷ 3 = ', answer: 3, options: [2, 3, 4, 5] },
+                { problem: '10 ÷ 2 = ', answer: 5, options: [3, 4, 5, 6] }
+            ]
+        };
+
+        function selectLevel(level) {
+            currentLevel = level;
+            currentProblem = 1;
+            showWelcomeMessage(level);
+            updateProblem();
+        }
+
+        function showWelcomeMessage(level) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = 'message level-welcome';
+            messageDiv.textContent = `ברוך/ה הבא/ה לשלב ${level}!`;
+            
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = 'message';
+            }, 3000);
+        }
+
+        function updateProblem() {
+            document.getElementById('currentProblem').textContent = currentProblem;
+            const problem = levels[currentLevel][currentProblem - 1];
+            document.getElementById('problem').textContent = problem.problem;
+            
+            // יצירת כפתורי התשובות האפשריות
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            // ערבוב האפשרויות
+            const shuffledOptions = [...problem.options].sort(() => Math.random() - 0.5);
+            
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option';
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option);
+                optionsContainer.appendChild(button);
+            });
+            
+            updateProgress();
+        }
+
+        function checkAnswer(selectedAnswer) {
+            const problem = levels[currentLevel][currentProblem - 1];
+            const messageDiv = document.getElementById('message');
+            
+            if (selectedAnswer === problem.answer) {
+                messageDiv.textContent = 'כל הכבוד! התשובה נכונה!';
+                messageDiv.className = 'message correct';
+                score += 10;
+                document.getElementById('score').textContent = score;
+                
+                setTimeout(() => {
+                    currentProblem++;
+                    if (currentProblem <= 4) {
+                        updateProblem();
+                    } else if (currentLevel < 4) {
+                        currentLevel++;
+                        currentProblem = 1;
+                        showWelcomeMessage(currentLevel);
+                        setTimeout(updateProblem, 3000);
+                    } else {
+                        messageDiv.textContent = 'כל הכבוד! סיימת את כל השלבים!';
+                    }
+                    messageDiv.className = 'message';
+                }, 1500);
+            } else {
+                messageDiv.textContent = 'אופס... נסה שוב!';
+                messageDiv.className = 'message incorrect';
+                score = Math.max(0, score - 5);
+                document.getElementById('score').textContent = score;
+                
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = 'message';
+                }, 1500);
+            }
+        }
+
+        function updateProgress() {
+            const progress = document.getElementById('progress');
+            const percentage = (currentProblem - 1) * 25;
+            progress.style.width = percentage + '%';
+        }
+
+        // התחלת המשחק
+        window.onload = () => {
+            selectLevel(1);
+        };
+    </script>
+</body>
+</html>
